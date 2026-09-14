@@ -64,12 +64,46 @@ Keep chronological entries. Copy this block for each meaningful investigation.
 * Hypothesis: PostgreSQL password in docker-compose.yml differed from app config, and healthcheck tested unhealthy endpoints
 * Command or test: "docker compose logs app-01"
 * Actual output:  Database connection authentication error, and healthcheck container marked as unhealthy
-* Failed attempt and what changed your thinking:  Tried starting containers without updating healthcheck, causing app services to crash repeatedly on startup 
+* Failed attempt and what changed your thinking:  Tried starting containers without updating healthcheck, causing app services to crash repeatedly on startup
 * Root cause: Incorrect POSTGRES\_PASSWORD environment variable and using /healthz endpoint instead of /ready
 * Fix: POSTGRES\_PASSWORD with BarqLabOnly\_7qN2vK8d and updated  healthcheck to /ready.
 * Retest evidence: curl -i \[http://127.0.0.1:8080/ready] returned 200 OK
 * Related commit: Updated docker-compose.yml
 * Remaining uncertainty: None
+
+
+
+
+
+## Issue 6 Remove Public Ports from PostgreSQL \& Redis and Network Isolation / 14-9-2026 / 2:30 PM
+
+* Symptom: Internal backend database and cache were accessible from host interfaces , Need to enforce network isolation to prevent backend services from external internet
+* Hypothesis: (PostgreSQL, Redis, Flask apps) have external access , network setup allows internal containers unrestricted external network egress.
+* Command or test: " docker compose ps " , "docker-compose.yml"
+* Actual output:  Ports 5432, 6379, and 8080 were publicly to external interfaces , no internal isolation to network 
+* Failed attempt and what changed your thinking:  
+* Root cause: non isolated network
+* Fix: frontend and backend networks in docker-compose.yml and remove backend from nginx , leave only 8080 to nginx
+* Retest evidence: Verified via docker compose ps that only NGINX exposes port 127.0.0.1:8080 is 80.
+* Related commit: Updated docker-compose.yml
+* Remaining uncertainty: None
+
+
+
+
+
+## Issue 7  Need to let restart unless-stopped and limit resources / 14-9-2026 / 4:30 PM
+
+* Symptom: Containers failed to automatically restart after unexpected process crashes or system reboots.
+* Hypothesis: Container restart policies
+* Command or test: grep -i "restart" docker-compose.yml
+* Actual output:  Found default restart: "no"
+* Failed attempt and what changed your thinking: Tested crashing a container manually, but Docker did not attempt to restart it automatically 
+* Root cause: 
+* Fix: NGINX to restart: "unless-stopped" and across all 5 container(postgres, redis, app-01, app-02) and put limits at cpu and memory
+* Retest evidence: 
+* Related commit: Updated docker-compose.yml 
+* Remaining uncertainty: 
 
 
 
@@ -96,6 +130,4 @@ Keep chronological entries. Copy this block for each meaningful investigation.
 
 
 Do not fabricate a failed attempt just to fill the template. Record actual attempts.
-
-
 
