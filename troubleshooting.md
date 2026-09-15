@@ -80,8 +80,8 @@ Keep chronological entries. Copy this block for each meaningful investigation.
 * Symptom: Internal backend database and cache were accessible from host interfaces , Need to enforce network isolation to prevent backend services from external internet
 * Hypothesis: (PostgreSQL, Redis, Flask apps) have external access , network setup allows internal containers unrestricted external network egress.
 * Command or test: " docker compose ps " , "docker-compose.yml"
-* Actual output:  Ports 5432, 6379, and 8080 were publicly to external interfaces , no internal isolation to network 
-* Failed attempt and what changed your thinking:  
+* Actual output:  Ports 5432, 6379, and 8080 were publicly to external interfaces , no internal isolation to network
+* Failed attempt and what changed your thinking:
 * Root cause: non isolated network
 * Fix: frontend and backend networks in docker-compose.yml and remove backend from nginx , leave only 8080 to nginx
 * Retest evidence: Verified via docker compose ps that only NGINX exposes port 127.0.0.1:8080 is 80.
@@ -98,12 +98,29 @@ Keep chronological entries. Copy this block for each meaningful investigation.
 * Hypothesis: Container restart policies
 * Command or test: grep -i "restart" docker-compose.yml
 * Actual output:  Found default restart: "no"
-* Failed attempt and what changed your thinking: Tested crashing a container manually, but Docker did not attempt to restart it automatically 
-* Root cause: 
+* Failed attempt and what changed your thinking: Tested crashing a container manually, but Docker did not attempt to restart it automatically
+* Root cause:
 * Fix: NGINX to restart: "unless-stopped" and across all 5 container(postgres, redis, app-01, app-02) and put limits at cpu and memory
-* Retest evidence: 
-* Related commit: Updated docker-compose.yml 
-* Remaining uncertainty: 
+* Retest evidence:
+* Related commit: Updated docker-compose.yml
+* Remaining uncertainty:
+
+
+
+
+
+## Issue 8  / 15-9-2026 / 12:30 PM
+
+* Symptom: when run python code of failure\_test.py it gives msg ( system unavailable after stopping app-01!)
+* Hypothesis: tried to write code again with increase delay to give time to system up 
+* Command or test: docker compose start app-01 , docker compose restart nginx , python failure\_test.py
+* Actual output:  \[FAIL] System unavailable after stopping app-01!
+* Failed attempt and what changed your thinking:  change failure\_test.py code and increase delay time 
+* Root cause: at nginx/nginx.conf need to add max\_fail , fail\_timeout and upstream
+* Fix: add max\_fails=1 fail\_timeout=2s at upstream app-01 and app-02 and proxy\_next\_upstream error timeout http\_500 http\_502 http\_503 http\_504;
+* Retest evidence: python failure\_test.py output is successfully 
+* Related commit: Updated nginx/nginx.conf
+* Remaining uncertainty: None 
 
 
 
