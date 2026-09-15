@@ -109,7 +109,7 @@ Keep chronological entries. Copy this block for each meaningful investigation.
 
 
 
-## Issue 8  / 15-9-2026 / 12:30 PM
+## Issue 8 add fail Timeout and Upstream  / 15-9-2026 / 12:30 PM
 
 * Symptom: when run python code of failure\_test.py it gives msg ( system unavailable after stopping app-01!)
 * Hypothesis: tried to write code again with increase delay to give time to system up 
