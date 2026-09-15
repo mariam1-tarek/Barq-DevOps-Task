@@ -1,0 +1,44 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify Docker Compose Syntax
+        run: docker compose config
+
+      - name: Build and Start Containers
+        run: docker compose up -d --build
+
+      - name: Wait for Containers Readiness
+        run: sleep 10
+
+      - name: Run System Validation Script
+        run: python validate.py
+
+      - name: Run Failure and Recovery Test
+        run: python failure_test.py
+
+      - name: Test Backup Script
+        run: |
+          chmod +x backup.sh
+          ./backup.sh
+
+      - name: Tear Down Containers
+        if: always()
+        run: docker compose down -v
